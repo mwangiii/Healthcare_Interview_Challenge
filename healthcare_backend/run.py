@@ -1,8 +1,9 @@
-from flask import Flask
-from flask_restx import Api
+# -*- coding: utf-8 -*-
+"""This is the main entry point for the application."""
+from app import create_app 
 
-app = Flask(__name__)
-api = Api(app, title="Healthcare API", description="API for managing healthcare appointments")
+
+app, db, api = create_app()
 
 if __name__ == "__main__":
     app.run(debug=True)

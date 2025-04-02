@@ -1,7 +1,8 @@
 
-from flask_mail import Message
+from flask_mail import Message, Mail
 from flask import current_app
-from app.extensions.email import mail
+
+mail = Mail()
 
 def send_email(subject, recipient, body):
     """Send an email to a user."""
