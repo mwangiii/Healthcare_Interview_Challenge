@@ -1,10 +1,12 @@
 from dotenv import load_dotenv
 import os
 
-# Load environment variables
 load_dotenv()
 
 class Config:
+    """
+    Configuration class for environment variables and email settings.
+    """
     SECRET_KEY = os.getenv("SECRET_KEY")
     DATABASE_URL = os.getenv("DATABASE_URL")
     JWT_SECRET_KEY = os.getenv("JWT_SECRET_KEY")

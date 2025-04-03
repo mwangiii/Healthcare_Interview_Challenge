@@ -12,7 +12,6 @@ db = SQLAlchemy()
 api = Api()
 migrate = Migrate()
 
-
 def create_app():
     app = Flask(__name__)
 
@@ -24,10 +23,15 @@ def create_app():
     migrate.init_app(app, db)
 
     # Flask-RESTX API
-    api = Api(app, doc="/api/docs", title="Patient API", version="1.0", description="API for managing patient data")
+    api.init_app(app, doc="/api/docs", title="Patient API", version="1.0", description="API for managing patient data")
     
     # Import namespaces after creating the app
     from app.patients.routes import patient_namespace
     api.add_namespace(patient_namespace, path="/patients")
 
-    return app, db, api
+    from app.doctors.routes import doctor_namespace
+    api.add_namespace(doctor_namespace, path="/doctors")
+
+
+
+    return app  # Return only the app instance

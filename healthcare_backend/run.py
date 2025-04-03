@@ -1,9 +1,7 @@
-# -*- coding: utf-8 -*-
 """This is the main entry point for the application."""
-from app import create_app 
+from app import create_app
 
-
-app, db, api = create_app()
+app = create_app()
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)

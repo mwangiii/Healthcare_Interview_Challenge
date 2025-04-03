@@ -8,7 +8,8 @@ INTERNAL_SERVER_ERROR_RESPONSE = {
     "message": "An error occurred"
 }
 
-register_model = api.model("Register", {
+#: Base model for common attributes between Patient and Doctor
+base_user_model = api.model("BaseUser", {
     "first_name": fields.String(required=True, description="First name"),
     "last_name": fields.String(required=True, description="Last name"),
     "email": fields.String(required=True, description="Email address"),
@@ -17,33 +18,50 @@ register_model = api.model("Register", {
     "password": fields.String(required=True, description="Password")
 })
 
-patient_model = api.model("PatientInfo", {
-    "patientId": fields.Integer(description="Patient ID"),
-    "first_name": fields.String(description="First name"),
-    "last_name": fields.String(description="Last name"),
-    "email": fields.String(description="Email address"),
-    "phone": fields.String(description="Phone number"),
-    "date_of_birth": fields.String(description="Date of birth")
+#: Doctor-specific fields
+doctor_model = api.model("DoctorInfo", {
+    "doctorId": fields.Integer(description="Doctor ID"),
+    "specialization": fields.String(description="Specialization"),
+    "license_number": fields.String(description="Medical license number"),
+    **base_user_model.fields
 })
 
-auth_response_model = api.model("AuthResponse", {
+#: Request model for Doctor Registration
+doctor_register_model = api.inherit("DoctorRegister", base_user_model, {
+    "specialization": fields.String(required=True, description="Specialization"),
+    "license_number": fields.String(required=True, description="Medical license number")
+})
+
+#: Response model for Doctor Info
+doctor_info_model = api.model("DoctorInfoResponse", {
+    "doctorId": fields.Integer(description="Doctor ID"),
+    "specialization": fields.String(description="Specialization"),
+    "license_number": fields.String(description="Medical license number"),
+    **base_user_model.fields
+})
+
+#: Authentication response model (Doctor)
+doctor_auth_response_model = api.model("DoctorAuthResponse", {
     "status": fields.String(example="success"),
     "message": fields.String(example="Login/Registration successful"),
-    "data": fields.Nested(api.model("AuthData", {
+    "data": fields.Nested(api.model("DoctorAuthData", {
         "accessToken": fields.String(description="JWT access token"),
-        "patient": fields.Nested(patient_model)
+        "doctor": fields.Nested(doctor_info_model)
     }))
 })
 
-login_model = api.model("Login", {
-    "email": fields.String(required=True, description="Patient's email"),
-    "password": fields.String(required=True, description="Patient's password")
+#: Request model for Doctor Login
+doctor_login_model = api.model("DoctorLogin", {
+    "email": fields.String(required=True, description="Doctor's email"),
+    "password": fields.String(required=True, description="Doctor's password")
 })
 
-change_password_model = api.model("ChangePassword", {
+#: Request model for Changing Doctor's Password
+doctor_change_password_model = api.model("DoctorChangePassword", {
     "new_password": fields.String(required=True, description="New password")
 })
 
+#: Appointment request and response models (for Doctor)
 appointment_model = api.model("Appointment", {
     "appointmentId": fields.Integer(description="Appointment ID"),
     "doctorId": fields.Integer(description="Doctor ID"),
@@ -52,12 +70,14 @@ appointment_model = api.model("Appointment", {
     "status": fields.String(description="Appointment status")
 })
 
+#: Request model for Booking an Appointment (for Doctor)
 book_appointment_model = api.model("BookAppointment", {
     "date": fields.String(required=True, description="Appointment date (YYYY-MM-DD)"),
     "time": fields.String(required=True, description="Appointment time (HH:MM)"),
     "doctor_id": fields.Integer(required=True, description="Doctor ID")
 })
 
+#: Response model for Booking an Appointment (for Doctor)
 appointment_details_model = api.model("AppointmentDetails", {
     "appointmentId": fields.Integer(description="Appointment ID"),
     "doctorId": fields.Integer(description="Doctor ID"),
@@ -66,11 +86,13 @@ appointment_details_model = api.model("AppointmentDetails", {
     "status": fields.String(description="Appointment status")
 })
 
+#: Response model for Rescheduling an Appointment
 reschedule_appointment_model = api.model("RescheduleAppointment", {
     "date": fields.String(required=True, description="New appointment date (YYYY-MM-DD)"),
     "time": fields.String(required=True, description="New appointment time (HH:MM)")
 })
 
+#: Response model for Canceling an Appointment
 cancel_appointment_model = api.model("CancelAppointmentResponse", {
     "status": fields.String(example="success"),
     "message": fields.String(example="Appointment cancelled successfully"),
