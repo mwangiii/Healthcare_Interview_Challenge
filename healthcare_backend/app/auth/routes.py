@@ -129,7 +129,7 @@ class UserLogin(Resource):
 
         try:
             if self.role == "doctor":
-                jwt_token = generate_jwt_token(user.employee_id, role=self.role)
+                jwt_token = generate_jwt_token(user.doctor_id, role=self.role)
             else:
                 jwt_token = generate_jwt_token(user.patient_id, role=self.role)
 
@@ -149,7 +149,7 @@ class UserLogin(Resource):
         response_data = {
             "accessToken": jwt_token,
             self.role: {
-                f"{self.role}Id": str(user.employee_id if self.role == "doctor" else user.patient_id),
+                f"{self.role}Id": str(user.doctor_id if self.role == "doctor" else user.patient_id),
                 "firstName": user.firstname,
                 "lastName": user.lastname,
                 "email": user.email,

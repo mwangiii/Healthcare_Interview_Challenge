@@ -1,6 +1,6 @@
 import uuid
-from datetime import datetime
-from sqlalchemy import Column, Integer, String, DateTime, Sequence
+from datetime import datetime, time
+from sqlalchemy import Column, Integer, String, DateTime, Sequence, Time
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from app import db
@@ -24,6 +24,12 @@ class Doctor(db.Model):
     password = Column(String(255), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
+    # Availability fields
+    availability_start = Column(Time, nullable=True)  # Doctor's start time
+    availability_end = Column(Time, nullable=True)    # Doctor's end time
+    days_available = Column(String(100), nullable=True)  # Days available (comma-separated: "Monday,Tuesday")
+
+    # Relationships
     appointments = relationship("Appointment", back_populates="doctor")
 
     def __repr__(self):
