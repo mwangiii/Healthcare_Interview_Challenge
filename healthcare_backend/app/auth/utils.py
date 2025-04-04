@@ -15,7 +15,6 @@ def generate_jwt_token(user_id, role):
         str: The generated JWT token.
     """
     try:
-        # Fetch the secret key from the config class
         jwt_secret_key = Config.JWT_SECRET_KEY
         if not jwt_secret_key:
             raise Exception("JWT_SECRET_KEY is not set in the environment variables.")
