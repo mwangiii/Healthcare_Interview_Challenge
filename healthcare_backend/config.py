@@ -21,3 +21,12 @@ class Config:
     MAIL_USERNAME = os.getenv("MAIL_USERNAME")
     MAIL_PASSWORD = os.getenv("MAIL_PASSWORD")
     MAIL_DEFAULT_SENDER = os.getenv("MAIL_DEFAULT_SENDER")
+
+    # Redis Config
+    CACHE_TYPE = "redis"
+    CACHE_REDIS_HOST = os.getenv("REDIS_HOST", "localhost")
+    CACHE_REDIS_PORT = int(os.getenv("REDIS_PORT", 6379))
+    CACHE_REDIS_DB = 0
+    CACHE_REDIS_URL = f"redis://{CACHE_REDIS_HOST}:{CACHE_REDIS_PORT}/{CACHE_REDIS_DB}"
+    CACHE_DEFAULT_TIMEOUT = 300  # Cache timeout in seconds (5 minutes)
+

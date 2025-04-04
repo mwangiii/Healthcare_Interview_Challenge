@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 import uuid
 from datetime import datetime, time
 from sqlalchemy import Column, Integer, String, DateTime, Sequence, Time
@@ -24,12 +25,10 @@ class Doctor(db.Model):
     password = Column(String(255), nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    # Availability fields
-    availability_start = Column(Time, nullable=True)  # Doctor's start time
-    availability_end = Column(Time, nullable=True)    # Doctor's end time
-    days_available = Column(String(100), nullable=True)  # Days available (comma-separated: "Monday,Tuesday")
+    availability_start = Column(Time, nullable=True)
+    availability_end = Column(Time, nullable=True)
+    days_available = Column(String(100), nullable=True)
 
-    # Relationships
     appointments = relationship("Appointment", back_populates="doctor")
 
     def __repr__(self):

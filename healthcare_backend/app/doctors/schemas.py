@@ -1,102 +1,63 @@
 from flask_restx import fields
 from app import api
+from marshmallow import Schema, fields as ma_fields, ValidationError, validates
+from datetime import datetime
 
-BAD_REQUEST_RESPONSE = {"status": "Bad Request", "message": "Invalid input"}
-NOT_FOUND_RESPONSE = {"status": "Not Found", "message": "Resource not found"}
-INTERNAL_SERVER_ERROR_RESPONSE = {
-    "status": "Internal Server Error",
-    "message": "An error occurred"
-}
-
-#: Base model for common attributes between Patient and Doctor
-base_user_model = api.model("BaseUser", {
-    "first_name": fields.String(required=True, description="First name"),
-    "last_name": fields.String(required=True, description="Last name"),
-    "email": fields.String(required=True, description="Email address"),
-    "phone": fields.String(required=True, description="Phone number"),
-    "date_of_birth": fields.String(required=True, description="Date of birth"),
-    "password": fields.String(required=True, description="Password")
+# RESTX API Models for Swagger documentation
+doctor_register_model = api.model('DoctorRegister', {
+    'firstname': fields.String(required=True, description='First name of the doctor'),
+    'lastname': fields.String(required=True, description='Last name of the doctor'),
+    'email': fields.String(required=True, description='Doctor email address'),
+    'phone': fields.String(required=True, description='Doctor phone number'),
+    'password': fields.String(required=True, description='Password for the doctor'),
+    'specialization': fields.String(required=True, description='Doctor specialization'),
 })
 
-#: Doctor-specific fields
-doctor_model = api.model("DoctorInfo", {
-    "doctorId": fields.Integer(description="Doctor ID"),
-    "specialization": fields.String(description="Specialization"),
-    "license_number": fields.String(description="Medical license number"),
-    **base_user_model.fields
+doctor_availability_model = api.model('DoctorAvailability', {
+    'availability_start': fields.String(required=True, description='Start time (HH:MM)'),
+    'availability_end': fields.String(required=True, description='End time (HH:MM)'),
+    'days_available': fields.List(fields.String, required=True, description='Days available'),
 })
 
-#: Request model for Doctor Registration
-doctor_register_model = api.inherit("DoctorRegister", base_user_model, {
-    "specialization": fields.String(required=True, description="Specialization"),
-    "license_number": fields.String(required=True, description="Medical license number")
+doctor_details_response = api.model('DoctorDetailsResponse', {
+    'doctor_id': fields.String(description='Unique identifier'),
+    'firstname': fields.String(description='First name'),
+    'lastname': fields.String(description='Last name'),
+    'specialization': fields.String(description='Specialization'),
+    'availability_start': fields.String(description='Start time (HH:MM)'),
+    'availability_end': fields.String(description='End time (HH:MM)'),
+    'days_available': fields.List(fields.String, description='Days available'),
 })
 
-#: Response model for Doctor Info
-doctor_info_model = api.model("DoctorInfoResponse", {
-    "doctorId": fields.Integer(description="Doctor ID"),
-    "specialization": fields.String(description="Specialization"),
-    "license_number": fields.String(description="Medical license number"),
-    **base_user_model.fields
+doctor_availability_response = api.model('DoctorAvailabilityResponse', {
+    'doctor_id': fields.String(description='Unique identifier'),
+    'availability_start': fields.String(description='Start time'),
+    'availability_end': fields.String(description='End time'),
+    'days_available': fields.List(fields.String, description='Days available'),
 })
 
-#: Authentication response model (Doctor)
-doctor_auth_response_model = api.model("DoctorAuthResponse", {
-    "status": fields.String(example="success"),
-    "message": fields.String(example="Login/Registration successful"),
-    "data": fields.Nested(api.model("DoctorAuthData", {
-        "accessToken": fields.String(description="JWT access token"),
-        "doctor": fields.Nested(doctor_info_model)
-    }))
-})
 
-#: Request model for Doctor Login
-doctor_login_model = api.model("DoctorLogin", {
-    "email": fields.String(required=True, description="Doctor's email"),
-    "password": fields.String(required=True, description="Doctor's password")
-})
+# Marshmallow Schema for validation logic
+class DoctorAvailabilitySchema(Schema):
+    availability_start = ma_fields.String(required=True)
+    availability_end = ma_fields.String(required=True)
+    days_available = ma_fields.List(ma_fields.String(), required=True)
 
-#: Request model for Changing Doctor's Password
-doctor_change_password_model = api.model("DoctorChangePassword", {
-    "new_password": fields.String(required=True, description="New password")
-})
+    @validates("availability_start")
+    def validate_start_time(self, value):
+        try:
+            datetime.strptime(value, "%H:%M")
+        except ValueError:
+            raise ValidationError("availability_start must be in HH:MM format")
 
-#: Appointment request and response models (for Doctor)
-appointment_model = api.model("Appointment", {
-    "appointmentId": fields.Integer(description="Appointment ID"),
-    "doctorId": fields.Integer(description="Doctor ID"),
-    "date": fields.String(description="Date of appointment (YYYY-MM-DD)"),
-    "time": fields.String(description="Time of appointment (HH:MM)"),
-    "status": fields.String(description="Appointment status")
-})
+    @validates("availability_end")
+    def validate_end_time(self, value):
+        try:
+            datetime.strptime(value, "%H:%M")
+        except ValueError:
+            raise ValidationError("availability_end must be in HH:MM format")
 
-#: Request model for Booking an Appointment (for Doctor)
-book_appointment_model = api.model("BookAppointment", {
-    "date": fields.String(required=True, description="Appointment date (YYYY-MM-DD)"),
-    "time": fields.String(required=True, description="Appointment time (HH:MM)"),
-    "doctor_id": fields.Integer(required=True, description="Doctor ID")
-})
-
-#: Response model for Booking an Appointment (for Doctor)
-appointment_details_model = api.model("AppointmentDetails", {
-    "appointmentId": fields.Integer(description="Appointment ID"),
-    "doctorId": fields.Integer(description="Doctor ID"),
-    "date": fields.String(description="Date of appointment (YYYY-MM-DD)"),
-    "time": fields.String(description="Time of appointment (HH:MM)"),
-    "status": fields.String(description="Appointment status")
-})
-
-#: Response model for Rescheduling an Appointment
-reschedule_appointment_model = api.model("RescheduleAppointment", {
-    "date": fields.String(required=True, description="New appointment date (YYYY-MM-DD)"),
-    "time": fields.String(required=True, description="New appointment time (HH:MM)")
-})
-
-#: Response model for Canceling an Appointment
-cancel_appointment_model = api.model("CancelAppointmentResponse", {
-    "status": fields.String(example="success"),
-    "message": fields.String(example="Appointment cancelled successfully"),
-    "data": fields.Nested(api.model("CancelledAppointmentData", {
-        "appointmentId": fields.Integer(description="Cancelled Appointment ID")
-    }))
-})
+    @validates("days_available")
+    def validate_days(self, value):
+        if not value or not isinstance(value, list):
+            raise ValidationError("days_available must be a non-empty list of strings")
