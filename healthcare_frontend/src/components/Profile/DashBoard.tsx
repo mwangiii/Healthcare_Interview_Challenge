@@ -1,11 +1,11 @@
 import React from 'react';
-import { User, Users, Calendar, BarChart, Heart, Plus, ArrowRight, ExternalLink } from 'lucide-react';
+import { User, Users, BarChart, Heart } from 'lucide-react';
 import ProfileCard from './ProfileCard';
-import NotificationsCard from './NotificationsCard';
-import ExaminationsCard from './ExaminationsCard';
 import HealthCurveCard from './HealthCurveCard';
-import TreatmentCard from './TreatmentCard';
 import AdviceCard from './AdviceCard';
+import NotificationsCard from './NotificationCard';
+import ExaminationsCard from './ExaminationCard';
+import TreatmentCard from '../../TreatmentCard';
 
 const Dashboard: React.FC = () => {
   return (
@@ -40,7 +40,7 @@ const Dashboard: React.FC = () => {
           {/* Left Column */}
           <div className="col-span-12 md:col-span-4 space-y-6">
             <ProfileCard />
-            <NotificationsCard />
+            <NotificationsCard/>
           </div>
           
           {/* Right Column */}
