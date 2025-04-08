@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import usePasswordToogle from './usePasswordToogle';
+import { useToast } from '../../hooks/use-toast';
 
 interface SignUpProps {
   onSuccess: () => void;
@@ -14,7 +15,10 @@ const SignUp: React.FC<SignUpProps> = ({ onSuccess }) => {
     password: '',
     confirmPassword: '',
   });
+
   const [PasswordInputType, Icon, toggleVisibility] = usePasswordToogle();
+  const [errors, setErrors] = useState<string[]>([]);
+  const { toast } = useToast();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -25,27 +29,47 @@ const SignUp: React.FC<SignUpProps> = ({ onSuccess }) => {
     event.preventDefault();
 
     if (formData.password !== formData.confirmPassword) {
-      alert('Passwords do not match');
+      toast({
+        title: 'Password mismatch',
+        description: 'Passwords do not match. Please try again.',
+      });
       return;
     }
 
     try {
-      const response = await fetch('/api/signup', {
+      const signUpResponse = await fetch(`${import.meta.env.VITE_API_URL}/patients/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          userName: formData.userName,
+          password: formData.password,
+        }),
       });
 
-      if (response.ok) {
-        alert('Account created successfully. Please log in.');
-        onSuccess();
+      const result = await signUpResponse.json();
+
+      if (!signUpResponse.ok) {
+        if (result?.email) {
+          toast({
+            title: 'Email already exists',
+            description: 'Please use a different email address.',
+          });
+        } else {
+          setErrors(["Something went wrong. Please try again later."]);
+        }
       } else {
-        const data = await response.json();
-        alert(`Signup failed: ${data.message || 'Unknown error'}`);
+        toast({
+          title: 'Sign up successful!',
+          description: 'You can now log in to your account.',
+        });
+        onSuccess();
       }
     } catch (error) {
-      alert('An error occurred. Please try again later.');
-      console.error(error);
+      console.error('Sign-up error:', error);
+      setErrors(["Something went wrong. Please try again later."]);
     }
   };
 
@@ -142,6 +166,14 @@ const SignUp: React.FC<SignUpProps> = ({ onSuccess }) => {
                 Sign up
               </button>
             </div>
+
+            {errors.length > 0 && (
+              <div className="mt-4 text-red-500 text-center text-sm">
+                {errors.map((error, idx) => (
+                  <p key={idx}>{error}</p>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </form>

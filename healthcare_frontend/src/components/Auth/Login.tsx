@@ -2,17 +2,56 @@ import React, { useState } from 'react';
 import { GoalIcon as GoogleIcon } from 'lucide-react';
 import usePasswordToogle from './usePasswordToogle';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../Auth/AuthContext';
 
 const LogIn: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [PasswordInputType, Icon, toggleVisibility] = usePasswordToogle();
   const navigate = useNavigate();
+  const { login } = useAuth(); // use login function from context
+
+  const handleLogin = async () => {
+    try {
+      const LoginResponse = await fetch(`${import.meta.env.VITE_API_URL}/patients/login`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email,
+          password: password,
+        }),
+      });
+
+      if (LoginResponse.ok) {
+        const data = await LoginResponse.json();
+        const token = data.data.accessToken;
+        login(token);
+        alert('Login successful! Redirecting to dashboard');
+        navigate('/dashboard');
+      } else {
+        const errorData = await LoginResponse.json();
+        if (errorData?.message?.toLowerCase().includes('not found')) {
+          alert('Patient not found!');
+        } else if (
+          errorData?.message?.toLowerCase().includes('password') ||
+          errorData?.message?.toLowerCase().includes('email')
+        ) {
+          alert('Wrong password or email!');
+        } else {
+          alert('Login failed! Please check your credentials.');
+        }
+      }
+    } catch (error) {
+      console.error('Error during login:', error);
+      alert('Something went wrong. Please try again later.');
+    }
+  };
 
   const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
-    console.log('Logged in with', email, password);
-    navigate('/dashboard');
+    handleLogin();
   };
 
   return (
