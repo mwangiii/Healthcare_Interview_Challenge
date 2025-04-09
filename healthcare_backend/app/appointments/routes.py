@@ -32,7 +32,6 @@ appointment_namespace.add_model("AppointmentsList", appointments_list_model)
 class AppointmentsResource(Resource):
     @jwt_required()
     @appointment_namespace.response(200, "Success", appointments_list_model)
-    @appointment_namespace.response(404, "No appointments found", error_response_model)
     def get(self):
         """
         Get all appointments related to the logged-in user.
@@ -53,8 +52,13 @@ class AppointmentsResource(Resource):
         else:
             return {"status": "error", "message": "Unauthorized"}, 403
 
+        # If no appointments, return an empty list with a success message
         if not appointments:
-            return {"status": "error", "message": "No appointments found"}, 404
+            return {
+                "status": "success",
+                "message": "Here is where we will display the appointments",
+                "data": {"appointments": []},
+            }, 200
 
         appointment_list = [
             {

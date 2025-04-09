@@ -20,20 +20,78 @@ doctor_namespace = Namespace('doctors', description='Doctors related operations'
 
 @doctor_namespace.route('/register')
 class DoctorRegister(UserRegister):
+    """
+    Endpoint for doctor registration.
+    Inherits from UserRegister and sets the model to Doctor with the role "doctor".
+    """
     def __init__(self, *args, **kwargs):
         super().__init__(model=Doctor, role="doctor")
 
 
 @doctor_namespace.route('/login')
 class DoctorLogin(UserLogin):
+    """
+    Endpoint for doctor login.
+    Inherits from UserLogin and sets the model to Doctor with the role "doctor".
+    """
     def __init__(self, *args, **kwargs):
         super().__init__(model=Doctor, role="doctor")
 
 
+@doctor_namespace.route('/')
+class GetAllDoctors(Resource):
+    """
+    Endpoint to get a list of all doctors.
+    Requires JWT authentication.
+    """
+    @jwt_required()
+    def get(self):
+        """
+        Retrieves a list of all doctors.
+
+        Returns:
+            - List of doctors on success.
+            - Error message if no doctors are found.
+        """
+        current_user = get_jwt_identity()
+        logger.debug(f"Fetching all doctors for user: {current_user}")
+
+        doctors = Doctor.query.all()
+        if not doctors:
+            return {"message": "No doctors found."}, 404
+
+        doctor_list = [{
+            "doctor_id": str(doctor.doctor_id),
+            "firstname": doctor.firstname,
+            "lastname": doctor.lastname,
+            "specialization": doctor.specialization
+        } for doctor in doctors]
+
+        return {
+            "status": "success",
+            "data": doctor_list
+            }, 200
+
 @doctor_namespace.route("/availability")
 class SetAvailability(Resource):
+    """
+    Endpoint to set the availability of a doctor.
+    Requires JWT authentication.
+    """
     @jwt_required()
     def post(self):
+        """
+        Updates the availability of the currently authenticated doctor.
+
+        Request Body:
+            - availability_start (str): Start time of availability in HH:MM format.
+            - availability_end (str): End time of availability in HH:MM format.
+            - days_available (list): List of days the doctor is available.
+
+        Returns:
+            - Success message and updated availability data on success.
+            - Error message on failure.
+        """
         current_user = get_jwt_identity()
 
         try:
@@ -76,9 +134,23 @@ class SetAvailability(Resource):
 
 @doctor_namespace.route("/availability/<uuid:doctor_id>")
 class GetAvailability(Resource):
+    """
+    Endpoint to get the availability of a specific doctor.
+    Requires JWT authentication.
+    """
     @jwt_required()
     @cache.cached(timeout=300, key_prefix="doctor_availability")
     def get(self, doctor_id):
+        """
+        Retrieves the availability of a doctor by their ID.
+
+        Path Parameter:
+            - doctor_id (uuid): The UUID of the doctor.
+
+        Returns:
+            - Availability data on success.
+            - Error message if the doctor is not found.
+        """
         current_user = get_jwt_identity()
         logger.debug(f"Fetching cache for doctor availability: {doctor_id}")
         cached_availability = cache.get(f"doctor_availability:{doctor_id}")
@@ -108,9 +180,23 @@ class GetAvailability(Resource):
 
 @doctor_namespace.route("/<uuid:doctor_id>")
 class GetDoctorDetails(Resource):
+    """
+    Endpoint to get the details of a specific doctor.
+    Requires JWT authentication.
+    """
     @jwt_required()
     @cache.cached(timeout=300, key_prefix="doctor_details")
     def get(self, doctor_id):
+        """
+        Retrieves the details of a doctor by their ID.
+
+        Path Parameter:
+            - doctor_id (uuid): The UUID of the doctor.
+
+        Returns:
+            - Doctor details on success.
+            - Error message if the doctor is not found.
+        """
         current_user = get_jwt_identity()
         logger.debug(f"Fetching cache for doctor details: {doctor_id}")
         cached_details = cache.get(f"doctor_details:{doctor_id}")

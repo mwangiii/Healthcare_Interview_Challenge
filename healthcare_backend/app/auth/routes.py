@@ -35,7 +35,7 @@ class UserRegister(Resource):
         if self.model.query.filter_by(phone=data.get("phone")).first():
             add_error_to_list(errors_list, "phone", "Phone number already in use")
 
-        if data.get("phone") and not re.match(r"^[0-9]{10}$", data["phone"]):
+        if data.get("phone") and not re.match(r"^(\+2547\d{8}|07\d{8})$", data["phone"]):
             add_error_to_list(errors_list, "phone", "Phone number is invalid")
 
         if data.get("email") and not re.match(r"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$", data["email"]):
