@@ -38,16 +38,31 @@ The documentation is on:https://wide-koi-kevinwangi-5f264f79.koyeb.app/api/docs
    git clone https://github.com/mwangiii/Healthcare_Interview_Challenge
    cd healthcare-backend
    ```
-2. Create and activate a virtual environment:
+2. Open the env file using your prefered editor and edit the following values
+  ```bash
+  emacs -nw env
+  ```
+  ```
+    SQLALCHEMY_DATABASE_URI=
+    JWT_SECRET_KEY = 
+    REDIS_HOST=
+    REDIS_PORT=
+    REDIS_DB=
+  ```
+3. Rename the file to .env
+  ```bash
+  mv env .env
+  ```
+4. Create and activate a virtual environment:
     ```bash
     python -m venv env
     source env/bin/activate  # On Windows: env\Scripts\activate
     ```
-3. Install dependencies:
+5. Install dependencies:
   ```bash
   pip install -r requirements.txt
   ```
-4. Run the Flask application:
+6. Run the Flask application:
   ```bash
   python run.py
   ```
