@@ -13,7 +13,7 @@ class Appointment(db.Model):
     """
     appointment_id = Column(UUID, primary_key=True, default=uuid.uuid4, unique=True)
     patient_id = Column(UUID, ForeignKey('patients.patient_id'), nullable=False)
-    doctor_id = Column(UUID, ForeignKey('doctors.doctor_id'), nullable=False)
+    doctor_id = Column(UUID, ForeignKey('doctors.doctor_id'), nullable=True)
     date = Column(Date, nullable=False)
     time = Column(Time, nullable=False)
     status = Column(String(50), default='booked')

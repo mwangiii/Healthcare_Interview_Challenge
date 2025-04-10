@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import SignUp from '../components/Auth/SignUp';
-import Login from '../components/Auth/Login';
+import SignUp from '../components/Auth/PatientAuth/PatientSignUp';
+import Login from '../components/Auth/PatientAuth/PatientLogin';
 
-const AuthForm: React.FC = () => {
+const PatientAuthForm: React.FC = () => {
   const [isLoginPage, setIsLoginPage] = useState(true);
 
   const toggleForm = () => setIsLoginPage(prev => !prev);
@@ -34,4 +34,4 @@ const AuthForm: React.FC = () => {
   );
 };
 
-export default AuthForm;
+export default PatientAuthForm;

@@ -222,3 +222,132 @@ class GetDoctorDetails(Resource):
         logger.debug(f"Cache set for doctor details: {doctor_id}")
 
         return {"status": "success", "data": doctor_details}, 200
+
+
+# doctors profile - can upload image,can update details,
+@doctor_namespace.route("/profile")
+class DoctorProfile(Resource):
+    """
+    Endpoint to manage the profile of a doctor.
+    Requires JWT authentication.
+    """
+    @jwt_required()
+    def get(self):
+        """
+        Retrieves the profile of the currently authenticated doctor.
+
+        Returns:
+            - Doctor profile data on success.
+            - Error message if the doctor is not found.
+        """
+        current_user = get_jwt_identity()
+        logger.debug(f"Fetching profile for user: {current_user}")
+
+        doctor = Doctor.query.filter_by(doctor_id=current_user).first()
+        if not doctor:
+            return {"message": "Doctor not found."}, 404
+
+        doctor_details = {
+            "doctor_id": str(doctor.doctor_id),
+            "employee_id": doctor.employee_id,
+            "firstname": doctor.firstname,
+            "lastname": doctor.lastname,
+            "specialization": doctor.specialization,
+            "image": doctor.image,
+            "email": doctor.email,
+            "phone": doctor.phone,
+        }
+
+        return {"status": "success", "data": doctor_details}, 200
+    
+    @jwt_required()
+    def put(self):
+        """
+        Updates the profile of the currently authenticated doctor.
+
+        Request Body:
+            - image (str): URL of the doctor's image.
+            - firstname (str): First name of the doctor.
+            - lastname (str): Last name of the doctor.
+            - specialization (str): Specialization of the doctor.
+
+        Returns:
+            - Success message and updated profile data on success.
+            - Error message if the doctor is not found or input is invalid.
+        """
+        current_user = get_jwt_identity()
+        logger.debug(f"Updating profile for user: {current_user}")
+
+        doctor = Doctor.query.filter_by(doctor_id=current_user).first()
+        if not doctor:
+            return {"message": "Doctor not found."}, 404
+
+        data = request.get_json()
+
+        # Update the doctor's profile with the provided data
+        doctor.image = data.get('image', doctor.image)
+        doctor.firstname = data.get('firstname', doctor.firstname)
+        doctor.lastname = data.get('lastname', doctor.lastname)
+        doctor.specialization = data.get('specialization', doctor.specialization)
+
+        db.session.commit()
+
+        return {
+            "status": "success",
+            "message": "Profile updated successfully.",
+            "data": {
+                "doctor_id": str(doctor.doctor_id),
+                "firstname": doctor.firstname,
+                "lastname": doctor.lastname,
+                "specialization": doctor.specialization,
+                "image": doctor.image
+            }
+        }, 200
+    
+    @jwt_required()
+    def post(self):
+        """
+        Creates a new profile for the currently authenticated doctor.
+
+        Request Body:
+            - image (str): URL of the doctor's image.
+            - firstname (str): First name of the doctor.
+            - lastname (str): Last name of the doctor.
+            - specialization (str): Specialization of the doctor.
+
+        Returns:
+            - Success message and created profile data on success.
+            - Error message if the input is invalid.
+        """
+        current_user = get_jwt_identity()
+        logger.debug(f"Creating profile for user: {current_user}")
+
+        doctor = Doctor.query.filter_by(doctor_id=current_user).first()
+        if not doctor:
+            return {"message": "Doctor not found."}, 404
+
+        data = request.get_json()
+
+        # Create a new profile with the provided data
+        new_doctor = Doctor(
+            doctor_id=uuid.uuid4(),
+            image=data.get('image', ""),
+            firstname=data.get('firstname', ""),
+            lastname=data.get('lastname', ""),
+            specialization=data.get('specialization', "")
+        )
+
+        db.session.add(new_doctor)
+        db.session.commit()
+
+        return {
+            "status": "success",
+            "message": "Profile created successfully.",
+            "data": {
+                "doctor_id": str(new_doctor.doctor_id),
+                "firstname": new_doctor.firstname,
+                "lastname": new_doctor.lastname,
+                "specialization": new_doctor.specialization,
+                "image": new_doctor.image
+            }
+        }, 201

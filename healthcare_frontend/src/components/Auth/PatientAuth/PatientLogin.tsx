@@ -1,51 +1,68 @@
 import React, { useState } from 'react';
 import { GoalIcon as GoogleIcon } from 'lucide-react';
-import usePasswordToogle from './usePasswordToogle';
+import usePasswordToogle from '../usePasswordToogle';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../Auth/AuthContext';
+import { useAuth } from '../AuthContext';
+import { useToast } from '../../../hooks/use-toast';
 
 const LogIn: React.FC = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [PasswordInputType, Icon, toggleVisibility] = usePasswordToogle();
   const navigate = useNavigate();
-  const { login } = useAuth(); // use login function from context
+  const { login } = useAuth();
+  const { toast } = useToast();
 
   const handleLogin = async () => {
     try {
       const LoginResponse = await fetch(`${import.meta.env.VITE_API_URL}/patients/login`, {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          email: email,
-          password: password,
-        }),
+          email,
+          password
+        })
       });
 
       if (LoginResponse.ok) {
         const data = await LoginResponse.json();
         const token = data.data.accessToken;
         login(token);
-        alert('Login successful! Redirecting to dashboard');
-        navigate('/dashboard');
+
+        toast({
+          title: 'Login successful!',
+          description: 'Redirecting to dashboard...'
+        });
+
+        navigate('/patient-dashboard');
       } else {
         const errorData = await LoginResponse.json();
-        if (errorData?.message?.toLowerCase().includes('not found')) {
-          alert('Patient not found!');
-        } else if (
-          errorData?.message?.toLowerCase().includes('password') ||
-          errorData?.message?.toLowerCase().includes('email')
-        ) {
-          alert('Wrong password or email!');
+        const message = errorData?.message?.toLowerCase();
+
+        if (message.includes('not found')) {
+          toast({
+            title: 'Login failed',
+            description: 'Patient not found!'
+          });
+        } else if (message.includes('password') || message.includes('email')) {
+          toast({
+            title: 'Invalid credentials',
+            description: 'Wrong password or email!'
+          });
         } else {
-          alert('Login failed! Please check your credentials.');
+          toast({
+            title: 'Login failed',
+            description: 'Please check your credentials.'
+          });
         }
       }
-    } catch (error) {
-      console.error('Error during login:', error);
-      alert('Something went wrong. Please try again later.');
+    } catch {
+      toast({
+        title: 'Something went wrong',
+        description: 'Please try again later.'
+      });
     }
   };
 
@@ -63,7 +80,7 @@ const LogIn: React.FC = () => {
           placeholder="Email"
           value={email}
           onChange={(e) => setEmail(e.target.value)}
-          className="m-1 p-4 w-[250px] rounded-full border border-gray-300"
+          className="m-1 p-4 w-[250px] border border-gray-300 rounded-md"
         />
         <div className="relative w-[250px] m-1">
           <input
@@ -72,7 +89,7 @@ const LogIn: React.FC = () => {
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="p-4 w-full rounded-full border border-gray-300 pr-12"
+            className="p-4 w-full border border-gray-300 rounded-md pr-12"
           />
           <span
             className="absolute right-4 top-1/2 transform -translate-y-1/2 cursor-pointer"
@@ -87,7 +104,7 @@ const LogIn: React.FC = () => {
         </p>
         <button
           type="submit"
-          className="mt-4 w-[150px] p-3 rounded-full text-white bg-medical-primary hover:bg-cyan-800 transition border border-white"
+          className="mt-4 w-[150px] p-3 rounded-md text-white bg-medical-primary hover:bg-cyan-800 transition border border-white"
         >
           Log In
         </button>

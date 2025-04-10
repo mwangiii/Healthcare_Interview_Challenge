@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 import uuid
 from datetime import datetime, time
-from sqlalchemy import Column, Integer, String, DateTime, Sequence, Time
+from sqlalchemy import Column, Integer, String, DateTime, Sequence, Time, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from app import db
@@ -17,6 +17,7 @@ class Doctor(db.Model):
 
     doctor_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True)
     employee_id = Column(Integer, unique=True, nullable=False, server_default=employee_id_seq.next_value())
+    image = Column(Text, nullable=True)
     firstname = Column(String(100), nullable=False)
     lastname = Column(String(100), nullable=False)
     specialization = Column(String(100), nullable=False)

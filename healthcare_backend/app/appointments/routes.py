@@ -91,13 +91,12 @@ class BookAppointmentResource(Resource):
         """
         Book an appointment (Patient only).
         """
-        current_user_id = get_jwt_identity()
-        user = Patient.query.filter_by(patient_id=current_user_id).first() or Doctor.query.filter_by(doctor_id=current_user_id).first()
+        current_user = get_jwt_identity()
+        user_role = current_user.get("role")
+        user = Patient.query.filter_by(patient_id=current_user.get("id")).first() or Doctor.query.filter_by(doctor_id=current_user.get("id")).first()
 
         if not user:
             return {"status": "error", "message": "User not found"}, 404
-
-        user_role = "patient" if isinstance(user, Patient) else "doctor"
 
         if user_role != "patient":
             return {"status": "error", "message": "Unauthorized, only patients can book appointments"}, 403
@@ -153,6 +152,7 @@ class BookAppointmentResource(Resource):
 
 @appointment_namespace.route("/cancel/<uuid:appointment_id>")
 class CancelAppointmentResource(Resource):
+    @jwt_required()
     @appointment_namespace.response(200, "Appointment cancelled successfully", cancel_appointment_response_model)
     @appointment_namespace.response(404, "Appointment not found", error_response_model)
     @appointment_namespace.response(403, "You are not authorized to cancel this appointment", error_response_model)
@@ -160,8 +160,13 @@ class CancelAppointmentResource(Resource):
         """
         Cancel an appointment (Patient only).
         """
-        current_user = get_jwt_identity()
-        user_role = current_user.get("role")
+        current_user_id = get_jwt_identity()
+        user = Patient.query.filter_by(patient_id=current_user_id).first()
+
+        if not user:
+            return {"status": "error", "message": "User not found"}, 404
+
+        user_role = "patient" if isinstance(user, Patient) else "doctor"
         if user_role != "patient":
             return {"status": "error", "message": "Unauthorized, only patients can cancel appointments"}, 403
 
@@ -169,18 +174,7 @@ class CancelAppointmentResource(Resource):
         if not appointment:
             return {"status": "error", "message": f"Appointment with ID {appointment_id} not found"}, 404
 
-        auth_header = request.headers.get("Authorization")
-        if not auth_header:
-            return {"status": "error", "message": "Authorization header missing"}, 400
-
-        try:
-            token = auth_header.split(" ")[1]
-            decoded_token = jwt.decode(token, Config.JWT_SECRET_KEY, algorithms=["HS256"])
-            patient_id_from_token = decoded_token.get("sub")
-        except (IndexError, jwt.ExpiredSignatureError, jwt.InvalidTokenError):
-            return {"status": "error", "message": "Invalid or expired token"}, 401
-
-        if str(appointment.patient_id) != str(patient_id_from_token):
+        if str(appointment.patient_id) != str(current_user_id):
             return {"status": "error", "message": "You are not authorized to cancel this appointment"}, 403
 
         patient = Patient.query.filter_by(patient_id=appointment.patient_id).first()
@@ -205,6 +199,7 @@ class CancelAppointmentResource(Resource):
 
 @appointment_namespace.route("/reschedule/<uuid:appointment_id>")
 class RescheduleAppointmentResource(Resource):
+    @jwt_required()
     @appointment_namespace.expect(reschedule_appointment_model)
     @appointment_namespace.response(200, "Appointment rescheduled successfully", appointment_model)
     @appointment_namespace.response(404, "Appointment not found", error_response_model)
@@ -214,8 +209,13 @@ class RescheduleAppointmentResource(Resource):
         """
         Reschedule an appointment (Patient only).
         """
-        current_user = get_jwt_identity()
-        user_role = current_user.get("role")
+        current_user_id = get_jwt_identity()
+        user = Patient.query.filter_by(patient_id=current_user_id).first()
+
+        if not user:
+            return {"status": "error", "message": "User not found"}, 404
+
+        user_role = "patient" if isinstance(user, Patient) else "doctor"
         if user_role != "patient":
             return {"status": "error", "message": "Unauthorized, only patients can reschedule appointments"}, 403
 
@@ -223,18 +223,7 @@ class RescheduleAppointmentResource(Resource):
         if not appointment:
             return {"status": "error", "message": f"Appointment with ID {appointment_id} not found"}, 404
 
-        auth_header = request.headers.get("Authorization")
-        if not auth_header:
-            return {"status": "error", "message": "Authorization header missing"}, 400
-
-        try:
-            token = auth_header.split(" ")[1]
-            decoded_token = jwt.decode(token, Config.JWT_SECRET_KEY, algorithms=["HS256"])
-            patient_id_from_token = decoded_token.get("sub")
-        except (IndexError, jwt.ExpiredSignatureError, jwt.InvalidTokenError):
-            return {"status": "error", "message": "Invalid or expired token"}, 401
-
-        if str(appointment.patient_id) != str(patient_id_from_token):
+        if str(appointment.patient_id) != str(current_user_id):
             return {"status": "error", "message": "You are not authorized to reschedule this appointment"}, 403
 
         data = request.get_json()
@@ -293,6 +282,11 @@ class ViewAppointmentResource(Resource):
         """
         current_user = get_jwt_identity()
         user_role = current_user.get("role")
+        user = Patient.query.filter_by(patient_id=current_user.get("id")).first() or Doctor.query.filter_by(doctor_id=current_user.get("id")).first()
+
+        if not user:
+            return {"status": "error", "message": "User not found"}, 404
+
         if user_role != "patient":
             return {"status": "error", "message": "Unauthorized, only patients can view appointment details"}, 403
 

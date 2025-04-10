@@ -1,19 +1,20 @@
 import React, { useState } from 'react';
-import usePasswordToogle from './usePasswordToogle';
-import { useToast } from '../../hooks/use-toast';
+import usePasswordToogle from '../usePasswordToogle';
+import { useToast } from '../../../hooks/use-toast';
 
 interface SignUpProps {
   onSuccess: () => void;
 }
 
-const SignUp: React.FC<SignUpProps> = ({ onSuccess }) => {
+const DoctorSignUp: React.FC<SignUpProps> = ({ onSuccess }) => {
   const [formData, setFormData] = useState({
-    firstName: '',
-    lastName: '',
+    firstname: '',
+    lastname: '',
+    phone: '',
     email: '',
-    userName: '',
+    specialization: '',
     password: '',
-    confirmPassword: '',
+    confirmPassword: ''
   });
 
   const [PasswordInputType, Icon, toggleVisibility] = usePasswordToogle();
@@ -31,90 +32,97 @@ const SignUp: React.FC<SignUpProps> = ({ onSuccess }) => {
     if (formData.password !== formData.confirmPassword) {
       toast({
         title: 'Password mismatch',
-        description: 'Passwords do not match. Please try again.',
+        description: 'Passwords do not match. Please try again.'
       });
       return;
     }
 
     try {
-      const signUpResponse = await fetch(`${import.meta.env.VITE_API_URL}/patients/register`, {
+      const signUpResponse = await fetch(`${import.meta.env.VITE_API_URL}/doctors/register`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          firstName: formData.firstName,
-          lastName: formData.lastName,
+          firstname: formData.firstname,
+          lastname: formData.lastname,
+          phone: formData.phone,
           email: formData.email,
-          userName: formData.userName,
-          password: formData.password,
-        }),
+          specialization: formData.specialization,
+          password: formData.password
+        })
       });
 
       const result = await signUpResponse.json();
 
       if (!signUpResponse.ok) {
-        if (result?.email) {
-          toast({
-            title: 'Email already exists',
-            description: 'Please use a different email address.',
-          });
+        if (result.errors) {
+          setErrors(result.errors.map((err: { field: string; message: string }) => `${err.field}: ${err.message}`));
         } else {
-          setErrors(["Something went wrong. Please try again later."]);
+          setErrors(['Something went wrong. Please try again later.']);
         }
       } else {
         toast({
           title: 'Sign up successful!',
-          description: 'You can now log in to your account.',
+          description: 'You can now log in to your account.'
         });
         onSuccess();
       }
     } catch (error) {
       console.error('Sign-up error:', error);
-      setErrors(["Something went wrong. Please try again later."]);
+      setErrors(['Something went wrong. Please try again later.']);
     }
   };
 
   return (
-    <div id="SignUp" className="flex flex-col items-center justify-center">
+    <div id="DoctorSignUp" className="flex flex-col items-center justify-center">
       <form onSubmit={handleSubmit}>
         <div className="flex flex-col items-center">
           <div className="flex flex-row space-x-2">
             <input
               type="text"
-              name="firstName"
+              name="firstname"
               placeholder="First Name"
-              value={formData.firstName}
+              value={formData.firstname}
               onChange={handleChange}
-              className="m-1 p-4 w-[130px] border border-gray-300 rounded-full"
+              className="m-1 p-4 w-[130px] border border-gray-300 rounded-md shadow-md focus:shadow-lg focus:ring-2 focus:ring-medical-primary transition"
               required
             />
             <input
               type="text"
-              name="lastName"
+              name="lastname"
               placeholder="Last Name"
-              value={formData.lastName}
+              value={formData.lastname}
               onChange={handleChange}
-              className="m-1 p-4 w-[130px] border border-gray-300 rounded-full"
+              className="m-1 p-4 w-[130px] border border-gray-300 rounded-md shadow-md focus:shadow-lg focus:ring-2 focus:ring-medical-primary transition"
               required
             />
           </div>
 
           <div className="flex flex-col mt-4 h-[60vh]">
             <input
-              type="text"
-              name="userName"
-              placeholder="Username"
-              value={formData.userName}
-              onChange={handleChange}
-              className="m-1 p-4 w-[300px] border border-gray-300 rounded-full"
-              required
-            />
-            <input
               type="email"
               name="email"
               placeholder="Email"
               value={formData.email}
               onChange={handleChange}
-              className="m-1 p-4 w-[300px] border border-gray-300 rounded-full"
+              className="m-1 p-4 w-[300px] border border-gray-300 rounded-md shadow-md focus:shadow-lg focus:ring-2 focus:ring-medical-primary transition"
+              required
+            />
+            <input
+              type="text"
+              name="phone"
+              placeholder="Phone Number"
+              value={formData.phone}
+              onChange={handleChange}
+              className="m-1 p-4 w-[300px] border border-gray-300 rounded-md shadow-md focus:shadow-lg focus:ring-2 focus:ring-medical-primary transition"
+              required
+            />
+            <input
+              type="text"
+              name="specialization"
+              placeholder="Specialization"
+              value={formData.specialization}
+              onChange={handleChange}
+              className="m-1 p-4 w-[300px] border border-gray-300 rounded-md shadow-md focus:shadow-lg focus:ring-2 focus:ring-medical-primary transition"
               required
             />
 
@@ -125,7 +133,7 @@ const SignUp: React.FC<SignUpProps> = ({ onSuccess }) => {
                 placeholder="Password"
                 value={formData.password}
                 onChange={handleChange}
-                className="m-1 p-4 w-[300px] border border-gray-300 rounded-full pr-12"
+                className="m-1 p-4 w-[300px] border border-gray-300 rounded-md shadow-md focus:shadow-lg focus:ring-2 focus:ring-medical-primary transition pr-12"
                 required
               />
               <span
@@ -143,7 +151,7 @@ const SignUp: React.FC<SignUpProps> = ({ onSuccess }) => {
                 placeholder="Confirm Password"
                 value={formData.confirmPassword}
                 onChange={handleChange}
-                className="m-1 p-4 w-[300px] border border-gray-300 rounded-full pr-12"
+                className="m-1 p-4 w-[300px] border border-gray-300 rounded-md shadow-md focus:shadow-lg focus:ring-2 focus:ring-medical-primary transition pr-12"
                 required
               />
               <span
@@ -161,7 +169,7 @@ const SignUp: React.FC<SignUpProps> = ({ onSuccess }) => {
             <div className="flex justify-center">
               <button
                 type="submit"
-                className="mt-4 w-[150px] p-3 rounded-full text-white bg-medical-primary hover:bg-cyan-800 transition border border-white"
+                className="mt-4 w-[150px] p-3 rounded-md text-white bg-medical-primary hover:bg-cyan-800 transition border border-white"
               >
                 Sign up
               </button>
@@ -181,4 +189,4 @@ const SignUp: React.FC<SignUpProps> = ({ onSuccess }) => {
   );
 };
 
-export default SignUp;
+export default DoctorSignUp;
