@@ -11,7 +11,6 @@ import uuid
 import logging
 import json
 
-# Setup logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
@@ -20,39 +19,20 @@ doctor_namespace = Namespace('doctors', description='Doctors related operations'
 
 @doctor_namespace.route('/register')
 class DoctorRegister(UserRegister):
-    """
-    Endpoint for doctor registration.
-    Inherits from UserRegister and sets the model to Doctor with the role "doctor".
-    """
     def __init__(self, *args, **kwargs):
         super().__init__(model=Doctor, role="doctor")
 
 
 @doctor_namespace.route('/login')
 class DoctorLogin(UserLogin):
-    """
-    Endpoint for doctor login.
-    Inherits from UserLogin and sets the model to Doctor with the role "doctor".
-    """
     def __init__(self, *args, **kwargs):
         super().__init__(model=Doctor, role="doctor")
 
 
 @doctor_namespace.route('/')
 class GetAllDoctors(Resource):
-    """
-    Endpoint to get a list of all doctors.
-    Requires JWT authentication.
-    """
     @jwt_required()
     def get(self):
-        """
-        Retrieves a list of all doctors.
-
-        Returns:
-            - List of doctors on success.
-            - Error message if no doctors are found.
-        """
         current_user = get_jwt_identity()
         logger.debug(f"Fetching all doctors for user: {current_user}")
 
@@ -67,31 +47,13 @@ class GetAllDoctors(Resource):
             "specialization": doctor.specialization
         } for doctor in doctors]
 
-        return {
-            "status": "success",
-            "data": doctor_list
-            }, 200
+        return {"status": "success", "data": doctor_list}, 200
+
 
 @doctor_namespace.route("/availability")
 class SetAvailability(Resource):
-    """
-    Endpoint to set the availability of a doctor.
-    Requires JWT authentication.
-    """
     @jwt_required()
     def post(self):
-        """
-        Updates the availability of the currently authenticated doctor.
-
-        Request Body:
-            - availability_start (str): Start time of availability in HH:MM format.
-            - availability_end (str): End time of availability in HH:MM format.
-            - days_available (list): List of days the doctor is available.
-
-        Returns:
-            - Success message and updated availability data on success.
-            - Error message on failure.
-        """
         current_user = get_jwt_identity()
 
         try:
@@ -111,8 +73,12 @@ class SetAvailability(Resource):
         except Exception as e:
             return {"message": "Invalid input", "errors": e.messages}, 400
 
-        doctor.availability_start = datetime.strptime(data["availability_start"], "%H:%M").time()
-        doctor.availability_end = datetime.strptime(data["availability_end"], "%H:%M").time()
+        doctor.availability_start = datetime.strptime(
+            data["availability_start"], "%H:%M"
+        ).time()
+        doctor.availability_end = datetime.strptime(
+            data["availability_end"], "%H:%M"
+        ).time()
         doctor.days_available = ",".join(data["days_available"])
 
         db.session.commit()
@@ -134,23 +100,9 @@ class SetAvailability(Resource):
 
 @doctor_namespace.route("/availability/<uuid:doctor_id>")
 class GetAvailability(Resource):
-    """
-    Endpoint to get the availability of a specific doctor.
-    Requires JWT authentication.
-    """
     @jwt_required()
     @cache.cached(timeout=300, key_prefix="doctor_availability")
     def get(self, doctor_id):
-        """
-        Retrieves the availability of a doctor by their ID.
-
-        Path Parameter:
-            - doctor_id (uuid): The UUID of the doctor.
-
-        Returns:
-            - Availability data on success.
-            - Error message if the doctor is not found.
-        """
         current_user = get_jwt_identity()
         logger.debug(f"Fetching cache for doctor availability: {doctor_id}")
         cached_availability = cache.get(f"doctor_availability:{doctor_id}")
@@ -169,7 +121,8 @@ class GetAvailability(Resource):
             "doctor_id": str(requested_doctor.doctor_id),
             "availability_start": str(requested_doctor.availability_start),
             "availability_end": str(requested_doctor.availability_end),
-            "days_available": requested_doctor.days_available.split(",") if requested_doctor.days_available else []
+            "days_available": requested_doctor.days_available.split(",")
+            if requested_doctor.days_available else []
         }
 
         cache.set(f"doctor_availability:{doctor_id}", json.dumps(data), timeout=300)
@@ -180,23 +133,9 @@ class GetAvailability(Resource):
 
 @doctor_namespace.route("/<uuid:doctor_id>")
 class GetDoctorDetails(Resource):
-    """
-    Endpoint to get the details of a specific doctor.
-    Requires JWT authentication.
-    """
     @jwt_required()
     @cache.cached(timeout=300, key_prefix="doctor_details")
     def get(self, doctor_id):
-        """
-        Retrieves the details of a doctor by their ID.
-
-        Path Parameter:
-            - doctor_id (uuid): The UUID of the doctor.
-
-        Returns:
-            - Doctor details on success.
-            - Error message if the doctor is not found.
-        """
         current_user = get_jwt_identity()
         logger.debug(f"Fetching cache for doctor details: {doctor_id}")
         cached_details = cache.get(f"doctor_details:{doctor_id}")
@@ -215,7 +154,8 @@ class GetDoctorDetails(Resource):
             "specialization": requested_doctor.specialization,
             "availability_start": str(requested_doctor.availability_start),
             "availability_end": str(requested_doctor.availability_end),
-            "days_available": requested_doctor.days_available.split(",") if requested_doctor.days_available else []
+            "days_available": requested_doctor.days_available.split(",")
+            if requested_doctor.days_available else []
         }
 
         cache.set(f"doctor_details:{doctor_id}", json.dumps(doctor_details), timeout=300)
@@ -224,22 +164,10 @@ class GetDoctorDetails(Resource):
         return {"status": "success", "data": doctor_details}, 200
 
 
-# doctors profile - can upload image,can update details,
 @doctor_namespace.route("/profile")
 class DoctorProfile(Resource):
-    """
-    Endpoint to manage the profile of a doctor.
-    Requires JWT authentication.
-    """
     @jwt_required()
     def get(self):
-        """
-        Retrieves the profile of the currently authenticated doctor.
-
-        Returns:
-            - Doctor profile data on success.
-            - Error message if the doctor is not found.
-        """
         current_user = get_jwt_identity()
         logger.debug(f"Fetching profile for user: {current_user}")
 
@@ -259,22 +187,9 @@ class DoctorProfile(Resource):
         }
 
         return {"status": "success", "data": doctor_details}, 200
-    
+
     @jwt_required()
     def put(self):
-        """
-        Updates the profile of the currently authenticated doctor.
-
-        Request Body:
-            - image (str): URL of the doctor's image.
-            - firstname (str): First name of the doctor.
-            - lastname (str): Last name of the doctor.
-            - specialization (str): Specialization of the doctor.
-
-        Returns:
-            - Success message and updated profile data on success.
-            - Error message if the doctor is not found or input is invalid.
-        """
         current_user = get_jwt_identity()
         logger.debug(f"Updating profile for user: {current_user}")
 
@@ -284,7 +199,6 @@ class DoctorProfile(Resource):
 
         data = request.get_json()
 
-        # Update the doctor's profile with the provided data
         doctor.image = data.get('image', doctor.image)
         doctor.firstname = data.get('firstname', doctor.firstname)
         doctor.lastname = data.get('lastname', doctor.lastname)
@@ -303,22 +217,9 @@ class DoctorProfile(Resource):
                 "image": doctor.image
             }
         }, 200
-    
+
     @jwt_required()
     def post(self):
-        """
-        Creates a new profile for the currently authenticated doctor.
-
-        Request Body:
-            - image (str): URL of the doctor's image.
-            - firstname (str): First name of the doctor.
-            - lastname (str): Last name of the doctor.
-            - specialization (str): Specialization of the doctor.
-
-        Returns:
-            - Success message and created profile data on success.
-            - Error message if the input is invalid.
-        """
         current_user = get_jwt_identity()
         logger.debug(f"Creating profile for user: {current_user}")
 
@@ -328,7 +229,6 @@ class DoctorProfile(Resource):
 
         data = request.get_json()
 
-        # Create a new profile with the provided data
         new_doctor = Doctor(
             doctor_id=uuid.uuid4(),
             image=data.get('image', ""),
