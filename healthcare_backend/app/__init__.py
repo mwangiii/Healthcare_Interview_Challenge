@@ -13,7 +13,7 @@ load_dotenv()
 # Initialize components
 db = SQLAlchemy()
 api = Api(
-    prefix="/api",
+    prefix="/api/v1",
     title="Tiberbu Healthcare Interview Challenge",
     version="1.0",
     description="API for managing healthcare data",
@@ -37,6 +37,8 @@ def create_app():
     
     # Enable CORS - Add this line
     CORS(app, resources={r"/api/*": {"origins": "*"}})
+    CORS(app, resources={r"/api/v1/*": {"origins": [""]}})
+
     
     from config import Config
     app.config.from_object(Config)
