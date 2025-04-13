@@ -8,7 +8,7 @@ You can access the live application here: [TIBERBU Healthcare App](https://healt
 
 The backend is hosted on **Koyeb** and is available in a duplicated repository: [Backend Repository](https://github.com/mwangiii/backend-health-care-interview-challenge)
 
-The documentation is on:https://wide-koi-kevinwangi-5f264f79.koyeb.app/api/docs
+The documentation is on:https://wide-koi-kevinwangi-5f264f79.koyeb.app/api/v1/docs
 
 ---
 
@@ -94,6 +94,6 @@ BACKEND
 **RESTful API**: Endpoints for managing users, appointments, and profiles.  
 **Caching**: Redis caching for frequently accessed data.  
 **JWT Authentication**: Secure token-based authentication.  
-**Swagger Documentation**: API documentation available at _/api/docs._  
+**Swagger Documentation**: API documentation available at _/api/v1/docs._  
 
 
